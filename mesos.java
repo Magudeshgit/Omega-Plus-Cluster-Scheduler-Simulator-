@@ -16,6 +16,7 @@ class Machine {
         this.availableMem = mem;
     }
 
+
     boolean allocate(int cpu, int mem) {
         if (availableCpu >= cpu && availableMem >= mem) {
             availableCpu -= cpu;
