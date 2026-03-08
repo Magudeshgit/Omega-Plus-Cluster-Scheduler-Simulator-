@@ -278,12 +278,12 @@ public static void main(String[] args){
     GlobalState global = cs.new GlobalState();
 
     // create machines
-    for(int i=0;i<5;i++){
-        global.addResource(cs.new Resource(i,4,8));
+    for(int i=0;i<50;i++){
+        global.addResource(cs.new Resource(i,4,4));
     }
 
     // create schedulers
-    int numSchedulers = 3;
+    int numSchedulers = 10;
 
     Scheduler[] schedulers = new Scheduler[numSchedulers];
 
@@ -295,8 +295,8 @@ public static void main(String[] args){
     Workload workload = cs.new Workload();
 
     workload.generateJobs(
-            20, // jobs
-            3,  // tasks per job
+            100, // jobs
+            5,  // tasks per job
             2,  //cpu
             2   //mem
     );
