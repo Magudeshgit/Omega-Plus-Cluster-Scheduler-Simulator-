@@ -395,7 +395,6 @@ class Allocator{
         Offer offer=new Offer(nextOfferId++,chosen,sim.cell);
 
         sim.afterDelay(allocatorThinkTime,()->{
-
             chosen.receiveOffer(offer);
         });
     }
@@ -454,7 +453,6 @@ class Simulator{
     }
 
     void afterDelay(double d,Runnable a){
-
         events.add(new SimEvent(time+d,a));
     }
 
@@ -504,50 +502,57 @@ public class Main{
 
         CellState cell=new CellState(50,16,64000);
 
+        // PRELOAD CLUSTER (simulate already busy machines)
+        cell.usedCpu = cell.totalCpu() * 0.6;
+        cell.usedMem = cell.totalMem() * 0.5;
+
         Simulator sim=new Simulator(cell);
 
+        //  CREATE 9 SCHEDULERS
         Scheduler sA=new Scheduler("S-A");
         Scheduler sB=new Scheduler("S-B");
         Scheduler sC=new Scheduler("S-C");
         Scheduler sD=new Scheduler("S-D");
+        Scheduler sE=new Scheduler("S-E");
+        Scheduler sF=new Scheduler("S-F");
+        Scheduler sG=new Scheduler("S-G");
+        Scheduler sH=new Scheduler("S-H");
+        Scheduler sI=new Scheduler("S-I");
 
-        sA.sim=sim;
-        sB.sim=sim;
-        sC.sim=sim;
-        sD.sim=sim;
+        // Attach simulator
+        Scheduler[] schedulers = {sA,sB,sC,sD,sE,sF,sG,sH,sI};
 
-        sim.schedulers.put("S-A",sA);
-        sim.schedulers.put("S-B",sB);
-        sim.schedulers.put("S-C",sC);
-        sim.schedulers.put("S-D",sD);
+        for(Scheduler s : schedulers){
+            s.sim = sim;
+            sim.schedulers.put(s.name, s);
+        }
 
         Random r=new Random();
 
         String[] workloads={"web","ml","analytics"};
 
-        for(int i=0;i<80;i++){
+        int TOTAL_JOBS = 600;
+
+        //  DISTRIBUTE JOBS ACROSS 9 SCHEDULERS
+        for(int i=0;i<TOTAL_JOBS;i++){
 
             String w=workloads[r.nextInt(workloads.length)];
 
             Job j=new Job(
-                    r.nextInt(2)+1,
-                    512*(r.nextInt(2)+1),
-                    (r.nextInt(10)+5)*1000,
-                    r.nextDouble()*5000,
-                    r.nextInt(2)+1,
+                    r.nextInt(4)+1,                  // CPU
+                    256*(r.nextInt(8)+1),            // MEM
+                    r.nextInt(4000)+2000,            // duration
+                    r.nextDouble()*20000,            // submit
+                    r.nextInt(80)+20,                // tasks
                     w
             );
 
-            Scheduler target;
-
-            if(i%4==0) target=sA;
-            else if(i%4==1) target=sB;
-            else if(i%4==2) target=sC;
-            else target=sD;
+            //  ROUND ROBIN ACROSS 9 SCHEDULERS
+            Scheduler target = schedulers[i % schedulers.length];
 
             sim.afterDelay(j.submit,()->target.addJob(j));
         }
 
-        sim.run(); 
+        sim.run();
     }
 }
